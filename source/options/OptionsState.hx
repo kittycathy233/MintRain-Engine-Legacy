@@ -36,9 +36,13 @@ class OptionsState extends MusicBeatState
 		DiscordClient.changePresence("Options Menu", null);
 		#end
 
-		// 背景（恢复为黑色）
-		var bg:FlxSprite = new FlxSprite().makeGraphic(FlxG.width, FlxG.height, FlxColor.BLACK);
-		bg.scrollFactor.set(0, 0);
+		// 背景（恢复为 menuDesat 图片，并设置为半透明）
+		var bg:FlxSprite = new FlxSprite().loadGraphic(Paths.image('menuDesat'));
+		bg.antialiasing = ClientPrefs.data.antialiasing;
+		bg.color = 0xFFea71fd;
+		bg.updateHitbox();
+		bg.screenCenter();
+		bg.alpha = 0.5; // 设置为半透明
 		add(bg);
 
 		// 灰色方块（开始菜单）
