@@ -4,28 +4,151 @@ import states.MainMenuState;
 import backend.StageData;
 import flixel.addons.transition.FlxTransitionableState;
 import mobile.substates.MobileControlSelectSubState;
-#if (target.threaded)
-import sys.thread.Thread;
-import sys.thread.Mutex;
-#end
+import flixel.tweens.FlxTween;
+import flixel.tweens.FlxEase;
+import flixel.FlxG;
+import flixel.util.FlxColor;
+import flixel.group.FlxGroup;
+import flixel.text.FlxText;
+import flixel.FlxSprite;
 
 class OptionsState extends MusicBeatState
 {
-	var options:Array<String> = ['Note Colors', 'Controls', 'Adjust Delay and Combo', 'Graphics', 'Visuals and UI', 'Gameplay', 'Mobile Options'];
-	private var grpOptions:FlxTypedGroup<Alphabet>;
+	var options:Array<String> = ['Note Colors', 'KeyBoard Controls', 'Adjust Delay and Combo', 'Graphics', 'Visuals and UI', 'Gameplay' #if mobile , 'Mobile Options' #end];
+	private var grpOptions:FlxGroup;
 	private static var curSelected:Int = 0;
 	public static var menuBG:FlxSprite;
 	public static var onPlayState:Bool = false;
 	var tipText:FlxText;
-	#if (target.threaded) var mutex:Mutex = new Mutex(); #end
+	var bgBlock:FlxSprite;
+
+	var taskbar:FlxSprite;
+	var startText:FlxText; // 将按钮改为 FlxText
+	var startMenu:FlxSprite; // 灰色方块
+	var startMenuOptions:FlxGroup; // 灰色方块内的选项
+
+	var isStartMenuOpen:Bool = false;
+
+	override function create() {
+		trace("Entering OptionsState"); // 调试信息
+
+		#if DISCORD_ALLOWED
+		DiscordClient.changePresence("Options Menu", null);
+		#end
+
+		// 背景（恢复为黑色）
+		var bg:FlxSprite = new FlxSprite().makeGraphic(FlxG.width, FlxG.height, FlxColor.BLACK);
+		bg.scrollFactor.set(0, 0);
+		add(bg);
+
+		// 灰色方块（开始菜单）
+		startMenu = new FlxSprite(0, FlxG.height).makeGraphic(Std.int(FlxG.width * 0.3), Std.int(FlxG.height * 0.35), FlxColor.fromRGB(64, 64, 64, 200)); // 灰色，20% 透明度
+		startMenu.scrollFactor.set(0, 0);
+		add(startMenu);
+
+		// 灰色方块内的选项
+		startMenuOptions = new FlxGroup();
+		for (i in 0...options.length) {
+			var optionText = new FlxText(20, startMenu.y + 10 + i * 30, 0, options[i], 24);
+			optionText.setFormat(Paths.font("arturito-slab.ttf"), 24, FlxColor.WHITE, LEFT);
+			optionText.scrollFactor.set(0, 0);
+			startMenuOptions.add(optionText);
+		}
+		add(startMenuOptions);
+
+		// 任务栏
+		taskbar = new FlxSprite(0, FlxG.height - 50).makeGraphic(FlxG.width, 50, FlxColor.fromRGB(128, 128, 128, 128)); // 灰色，50% 透明度
+		taskbar.scrollFactor.set(0, 0);
+		add(taskbar);
+
+		// 将“Start”文本放在最后生成
+		startText = new FlxText(10, FlxG.height - 40, 0, "Start", 24);
+		startText.setFormat(Paths.font("arturito-slab.ttf"), 24, FlxColor.WHITE, LEFT);
+		startText.scrollFactor.set(0, 0);
+		add(startText);
+
+		// 初始状态下隐藏灰色方块和选项
+		startMenu.visible = false;
+		startMenuOptions.visible = false;
+
+		// 启用鼠标可见性
+		FlxG.mouse.visible = true;
+
+		super.create();
+	}
+
+	function toggleStartMenu() {
+		isStartMenuOpen = !isStartMenuOpen;
+
+		if (isStartMenuOpen) {
+			// 显示灰色方块和选项
+			startMenu.visible = true;
+			startMenuOptions.visible = true;
+
+			// 灰色方块从屏幕底部滑出，最终底部与任务栏顶部对齐
+			var targetY = taskbar.y - startMenu.height; // 目标 Y 坐标
+			FlxTween.tween(startMenu, { y: targetY }, 0.3, { 
+				ease: FlxEase.quadOut,
+				onUpdate: function(tween:FlxTween) {
+					// 更新选项的位置
+					for (i in 0...startMenuOptions.members.length) {
+						var optionText:FlxText = cast(startMenuOptions.members[i], FlxText);
+						optionText.y = startMenu.y + 10 + i * 30;
+					}
+				}
+			});
+		} else {
+			// 灰色方块滑回屏幕底部
+			FlxTween.tween(startMenu, { y: FlxG.height }, 0.3, { 
+				ease: FlxEase.quadOut,
+				onUpdate: function(tween:FlxTween) {
+					// 更新选项的位置
+					for (i in 0...startMenuOptions.members.length) {
+						var optionText:FlxText = cast(startMenuOptions.members[i], FlxText);
+						optionText.y = startMenu.y + 10 + i * 30;
+					}
+				},
+				onComplete: function(tween:FlxTween) {
+					startMenu.visible = false;
+					startMenuOptions.visible = false;
+				}
+			});
+		}
+	}
+
+	override function update(elapsed:Float) {
+		super.update(elapsed);
+
+		if (FlxG.mouse.justPressed) {
+			// 检查是否点击了“Start”文本
+			if (FlxG.mouse.overlaps(startText)) {
+				toggleStartMenu();
+			}
+
+			// 检查是否点击了灰色方块内的选项
+			for (i in 0...startMenuOptions.members.length) {
+				var optionText:FlxText = cast(startMenuOptions.members[i], FlxText);
+				if (FlxG.mouse.overlaps(optionText)) {
+					trace("Selected option: " + options[i]); // 调试信息
+					openSelectedSubstate(options[i]);
+					toggleStartMenu();
+					break;
+				}
+			}
+		}
+
+		if (controls.BACK) {
+			FlxG.sound.play(Paths.sound('cancelMenu'));
+			MusicBeatState.switchState(new MainMenuState());
+		}
+	}
 
 	function openSelectedSubstate(label:String) {
-		persistentUpdate = false;
-		if (label != "Adjust Delay and Combo") removeTouchPad();
+		trace("Opening substate: " + label); // 调试信息
 		switch(label) {
 			case 'Note Colors':
 				openSubState(new options.NotesSubState());
-			case 'Controls':
+			case 'KeyBoard Controls':
 				openSubState(new options.ControlsSubState());
 			case 'Graphics':
 				openSubState(new options.GraphicsSettingsSubState());
@@ -40,144 +163,8 @@ class OptionsState extends MusicBeatState
 		}
 	}
 
-	var selectorLeft:Alphabet;
-	var selectorRight:Alphabet;
-
-	override function create() {
-		#if DISCORD_ALLOWED
-		DiscordClient.changePresence("Options Menu", null);
-		#end
-
-		var bg:FlxSprite = new FlxSprite().loadGraphic(Paths.image('menuDesat'));
-		bg.antialiasing = ClientPrefs.data.antialiasing;
-		bg.color = 0xFFea71fd;
-		bg.updateHitbox();
-
-		bg.screenCenter();
-		add(bg);
-
-		if (controls.mobileC)
-		{
-			tipText = new FlxText(150, FlxG.height - 24, 0, 'Press ' + #if mobile 'C' #else 'CTRL or C' #end + ' to Go Mobile Controls Menu', 16);
-			tipText.setFormat("VCR OSD Mono", 17, FlxColor.WHITE, LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
-			tipText.borderSize = 1.25;
-			tipText.scrollFactor.set();
-			tipText.antialiasing = ClientPrefs.data.antialiasing;
-			add(tipText);
-		}
-
-		grpOptions = new FlxTypedGroup<Alphabet>();
-		add(grpOptions);
-
-		for (i in 0...options.length)
-		{
-			var optionText:Alphabet = new Alphabet(0, 0, options[i], true);
-			optionText.screenCenter();
-			optionText.y += (100 * (i - (options.length / 2))) + 50;
-			grpOptions.add(optionText);
-		}
-
-		selectorLeft = new Alphabet(0, 0, '>', true);
-		add(selectorLeft);
-		selectorRight = new Alphabet(0, 0, '<', true);
-		add(selectorRight);
-
-		changeSelection();
-		ClientPrefs.saveSettings();
-
-		addTouchPad("UP_DOWN", "A_B_C");
-
-		#if (target.threaded)
-		Thread.create(()->{
-			mutex.acquire();
-
-			for (i in VisualsUISubState.pauseMusics)
-			{
-				if (i.toLowerCase() != "none")
-					Paths.music(Paths.formatToSongPath(i));
-			}
-
-			mutex.release();
-		});
-		#end
-
-		super.create();
-	}
-
-	override function closeSubState() {
-		super.closeSubState();
-		#if DISCORD_ALLOWED
-		DiscordClient.changePresence("Options Menu", null);
-		#end
-		ClientPrefs.saveSettings();
-		ClientPrefs.loadPrefs();
-		controls.isInSubstate = false;
-        removeTouchPad();
-		addTouchPad("UP_DOWN", "A_B_C");
-		persistentUpdate = true;
-	}
-
-    var exiting:Bool = false;
-	override function update(elapsed:Float) {
-		super.update(elapsed);
-
-		if (!exiting) {
-		if (controls.UI_UP_P) {
-			changeSelection(-1);
-		}
-		if (controls.UI_DOWN_P) {
-			changeSelection(1);
-		}
-
-		if (touchPad.buttonC.justPressed || FlxG.keys.justPressed.CONTROL && controls.mobileC)
-		{
-			persistentUpdate = false;
-			openSubState(new MobileControlSelectSubState());
-		}
-
-		if (controls.BACK) {
-            exiting = true;
-			FlxG.sound.play(Paths.sound('cancelMenu'));
-			if(onPlayState)
-			{
-				StageData.loadDirectory(PlayState.SONG);
-				LoadingState.loadAndSwitchState(new PlayState());
-				FlxG.sound.music.volume = 0;
-			}
-			else MusicBeatState.switchState(new MainMenuState());
-		}
-		else if (controls.ACCEPT) openSelectedSubstate(options[curSelected]);
-	}
-	}
-	
-	function changeSelection(change:Int = 0) {
-		curSelected += change;
-		if (curSelected < 0)
-			curSelected = options.length - 1;
-		if (curSelected >= options.length)
-			curSelected = 0;
-
-		var bullShit:Int = 0;
-
-		for (item in grpOptions.members) {
-			item.targetY = bullShit - curSelected;
-			bullShit++;
-
-			item.alpha = 0.6;
-			if (item.targetY == 0) {
-				item.alpha = 1;
-				selectorLeft.x = item.x - 63;
-				selectorLeft.y = item.y;
-				selectorRight.x = item.x + item.width + 15;
-				selectorRight.y = item.y;
-			}
-		}
-		FlxG.sound.play(Paths.sound('scrollMenu'));
-	}
-
-	override function destroy()
-	{
-		ClientPrefs.loadPrefs();
+	override function destroy() {
+		trace("Exiting OptionsState"); // 调试信息
 		super.destroy();
 	}
 }
