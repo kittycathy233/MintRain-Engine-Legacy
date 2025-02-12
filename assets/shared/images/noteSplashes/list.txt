@@ -2,5 +2,4 @@ Diamond
 Electric
 Sparkles
 Vanilla
-None
-FunkArchive
+none

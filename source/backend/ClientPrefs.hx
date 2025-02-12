@@ -16,7 +16,7 @@ import states.TitleState;
 	public var screensaver:Bool = false;
 	public var wideScreen:Bool = false;
 	#if android
-	public var storageType:String = "EXTERNAL";
+	public var storageType:String = "EXTERNAL_DATA";
 	#end
 	public var hitboxType:String = "Gradient";
 	public var popUpRating:Bool = true;
@@ -92,7 +92,7 @@ import states.TitleState;
 	public var discordRPC:Bool = true;
 
 	//杂七杂八的特性
-	public var fpsCounterSize:Float = 1;
+	public var fpsCounterSize:Int = 14;
 	public var perfectWindow:Int = 25;
 	public var coloredfpscounter:Bool = false;
 	public var exgameversion:Bool = true;
@@ -106,12 +106,7 @@ import states.TitleState;
 	public var iconbopstyle:String = 'MintRain';
 	public var healthbarstyle:String = 'Psych';
 	public var ratingsAlpha:Float = 1;
-	public var customFadeStyle:String = 'Vanilla';
-	public var showRunningOS:Bool = true;
-	//NFE的特性
-	public var CustomFadeSound:Bool = true;
-	public var CustomFadeText:Bool = true;
-
+	
 }
 
 class ClientPrefs {
