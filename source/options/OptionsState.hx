@@ -11,11 +11,10 @@ import flixel.util.FlxColor;
 import flixel.group.FlxGroup;
 import flixel.text.FlxText;
 import flixel.FlxSprite;
-import flixel.util.FlxSpriteUtil;
 
 class OptionsState extends MusicBeatState
 {
-	var options:Array<String> = ['Note Colors', 'KeyBoard Controls', 'Adjust Delay and Combo', 'Graphics', 'Visuals and UI', 'Psych Gameplay' , 'MintRain Gameplay'#if mobile , 'Mobile Options' #end];
+	var options:Array<String> = ['Note Colors', 'KeyBoard Controls', 'Adjust Delay and Combo', 'Graphics', 'Visuals and UI', 'Gameplay' #if mobile , 'Mobile Options' #end];
 	private var grpOptions:FlxGroup;
 	private static var curSelected:Int = 0;
 	public static var menuBG:FlxSprite;
@@ -46,21 +45,9 @@ class OptionsState extends MusicBeatState
 		bg.alpha = 0.5; // 设置为半透明
 		add(bg);
 
-		// 手动实现渐变效果
-		var gradient:FlxSprite = new FlxSprite().makeGraphic(FlxG.width, FlxG.height, FlxColor.TRANSPARENT);
-		for (i in 0...FlxG.height) {
-			var alpha = Std.int((i / FlxG.height) * 128); // 透明度从 0 到 128
-			gradient.pixels.fillRect(new flash.geom.Rectangle(0, i, FlxG.width, 1), FlxColor.fromRGB(0, 0, 0, alpha));
-		}
-		gradient.scrollFactor.set(0, 0);
-		add(gradient);
-
 		// 灰色方块（开始菜单）
 		startMenu = new FlxSprite(0, FlxG.height).makeGraphic(Std.int(FlxG.width * 0.3), Std.int(FlxG.height * 0.35), FlxColor.fromRGB(64, 64, 64, 200)); // 灰色，20% 透明度
 		startMenu.scrollFactor.set(0, 0);
-
-		// 添加圆角和阴影
-		FlxSpriteUtil.drawRoundRect(startMenu, 0, 0, startMenu.width, startMenu.height, 15, 15, FlxColor.fromRGB(64, 64, 64, 200), { thickness: 2, color: FlxColor.fromRGB(128, 128, 128, 100) });
 		add(startMenu);
 
 		// 灰色方块内的选项
@@ -69,10 +56,6 @@ class OptionsState extends MusicBeatState
 			var optionText = new FlxText(20, startMenu.y + 10 + i * 30, 0, options[i], 24);
 			optionText.setFormat(Paths.font("arturito-slab.ttf"), 24, FlxColor.WHITE, LEFT);
 			optionText.scrollFactor.set(0, 0);
-
-			// 添加悬停效果
-			optionText.alpha = 0.6;
-			optionText.setBorderStyle(OUTLINE, FlxColor.BLACK, 1);
 			startMenuOptions.add(optionText);
 		}
 		add(startMenuOptions);
@@ -80,20 +63,12 @@ class OptionsState extends MusicBeatState
 		// 任务栏
 		taskbar = new FlxSprite(0, FlxG.height - 50).makeGraphic(FlxG.width, 50, FlxColor.fromRGB(128, 128, 128, 128)); // 灰色，50% 透明度
 		taskbar.scrollFactor.set(0, 0);
-
-		// 添加任务栏阴影
-		var taskbarShadow = new FlxSprite(0, FlxG.height - 50).makeGraphic(FlxG.width, 5, FlxColor.fromRGB(0, 0, 0, 100));
-		taskbarShadow.scrollFactor.set(0, 0);
-		add(taskbarShadow);
 		add(taskbar);
 
 		// 将“Start”文本放在最后生成
 		startText = new FlxText(10, FlxG.height - 40, 0, "Start", 24);
 		startText.setFormat(Paths.font("arturito-slab.ttf"), 24, FlxColor.WHITE, LEFT);
 		startText.scrollFactor.set(0, 0);
-
-		// 添加悬停效果
-		startText.setBorderStyle(OUTLINE, FlxColor.BLACK, 1);
 		add(startText);
 
 		// 初始状态下隐藏灰色方块和选项
@@ -117,7 +92,7 @@ class OptionsState extends MusicBeatState
 			// 灰色方块从屏幕底部滑出，最终底部与任务栏顶部对齐
 			var targetY = taskbar.y - startMenu.height; // 目标 Y 坐标
 			FlxTween.tween(startMenu, { y: targetY }, 0.3, { 
-				ease: FlxEase.backOut, // 添加弹性效果
+				ease: FlxEase.quadOut,
 				onUpdate: function(tween:FlxTween) {
 					// 更新选项的位置
 					for (i in 0...startMenuOptions.members.length) {
@@ -129,7 +104,7 @@ class OptionsState extends MusicBeatState
 		} else {
 			// 灰色方块滑回屏幕底部
 			FlxTween.tween(startMenu, { y: FlxG.height }, 0.3, { 
-				ease: FlxEase.backIn, // 添加弹性效果
+				ease: FlxEase.quadOut,
 				onUpdate: function(tween:FlxTween) {
 					// 更新选项的位置
 					for (i in 0...startMenuOptions.members.length) {
@@ -166,18 +141,6 @@ class OptionsState extends MusicBeatState
 			}
 		}
 
-		// 悬停效果
-		for (i in 0...startMenuOptions.members.length) {
-			var optionText:FlxText = cast(startMenuOptions.members[i], FlxText);
-			if (FlxG.mouse.overlaps(optionText)) {
-				optionText.alpha = 1;
-				optionText.scale.set(1.1, 1.1); // 悬停时放大
-			} else {
-				optionText.alpha = 0.6;
-				optionText.scale.set(1, 1); // 恢复原大小
-			}
-		}
-
 		if (controls.BACK) {
 			FlxG.sound.play(Paths.sound('cancelMenu'));
 			MusicBeatState.switchState(new MainMenuState());
@@ -195,15 +158,13 @@ class OptionsState extends MusicBeatState
 				openSubState(new options.GraphicsSettingsSubState());
 			case 'Visuals and UI':
 				openSubState(new options.VisualsUISubState());
-			case 'Psych Gameplay':
+			case 'Gameplay':
 				openSubState(new options.GameplaySettingsSubState());
 			case 'Adjust Delay and Combo':
 				MusicBeatState.switchState(new options.NoteOffsetState());
 			case 'Mobile Options':
 				openSubState(new mobile.options.MobileOptionsSubState());
-			case 'MintRain Gameplay':
-				openSubState(new options.ExtraGameplaySettingsSubState());
-	}
+		}
 	}
 
 	override function destroy() {

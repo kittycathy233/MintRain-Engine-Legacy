@@ -6,7 +6,6 @@ import openfl.text.TextFormat;
 import openfl.system.System as OpenFlSystem;
 import lime.system.System as LimeSystem;
 import states.MainMenuState;
-import openfl.text.Font;
 
 /**
 	The FPS class provides an easy-to-use monitor to display
@@ -32,9 +31,6 @@ class FPSCounter extends TextField
 		The current memory usage (WARNING: this is NOT your total program memory usage, rather it shows the garbage collector memory)
 	**/
 	public var memoryMegas(get, never):Float;
-	public var memoryPeakMegas(get, never):Float;
-    private var memoryPeak:Float = 0;
-	public var font:Font = new Font('assets/fonts/FZLanTYJ_Cu.otf');
 
 	@:noCompletion private var times:Array<Float>;
 
@@ -48,7 +44,7 @@ class FPSCounter extends TextField
 		if (LimeSystem.platformName == LimeSystem.platformVersion || LimeSystem.platformVersion == null)
 			os = '\nOS: ${LimeSystem.platformName}' #if cpp + ' ${getArch() != 'Unknown' ? getArch() : ''}' #end;
 		else
-			os = '\nOS: ${LimeSystem.platformName}' + ' ${LimeSystem.platformVersion}' #if cpp + ' ${getArch() != 'Unknown' ? getArch() : ''}' #end;
+			os = '\nOS: ${LimeSystem.platformName}' #if cpp + ' ${getArch() != 'Unknown' ? getArch() : ''}' #end + ' - ${LimeSystem.platformVersion}';
 		#end
 
 		positionFPS(x, y);
@@ -56,8 +52,7 @@ class FPSCounter extends TextField
 		currentFPS = 0;
 		selectable = false;
 		mouseEnabled = false;
-        defaultTextFormat = new TextFormat(font.fontName, 14, color); // 使用自定义字体
-		//defaultTextFormat = new TextFormat("_sans", 14, color);
+		defaultTextFormat = new TextFormat("_sans", 14, color);
 		width = FlxG.width;
 		multiline = true;
 		text = "Loading... ";
@@ -87,14 +82,10 @@ class FPSCounter extends TextField
 
 	public dynamic function updateText():Void // so people can override it in hscript
 	{
-		if (memoryMegas > memoryPeak) {
-            memoryPeak = memoryMegas;
-        }
-
 		text = 
 		'FPS: $currentFPS' + 
-		'\nMemory: ${flixel.util.FlxStringUtil.formatBytes(memoryMegas)}'+' / ${flixel.util.FlxStringUtil.formatBytes(memoryPeak)}';
-		if(ClientPrefs.data.showRunningOS) text += os;
+		'\nMemory: ${flixel.util.FlxStringUtil.formatBytes(memoryMegas)}' + 
+		os;
 		if(ClientPrefs.data.exgameversion) text += '\nMintRain Engine v${MainMenuState.mintrainEngineVersion} \nPsych Engine v${MainMenuState.psychEngineVersion}';
 
 		textColor = 0xFFFFFFFF;
@@ -104,9 +95,6 @@ class FPSCounter extends TextField
 
 	inline function get_memoryMegas():Float
 		return cast(OpenFlSystem.totalMemory, UInt);
-
-	inline function get_memoryPeakMegas():Float
-        return memoryPeak;
 
 	public inline function positionFPS(X:Float, Y:Float, ?scale:Float = 1){
 		scaleX = scaleY = #if android (scale > 1 ? scale : 1) #else (scale < 1 ? scale : 1) #end;
