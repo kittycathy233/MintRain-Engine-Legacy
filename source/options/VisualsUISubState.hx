@@ -121,6 +121,20 @@ class VisualsUISubState extends BaseOptionsMenu
 		addOption(option);
 		option.onChange = onChangeFPSCounter;
 
+		//有个抽象的问题，这个东西不会改
+		/*var option:Option = new Option('FPS Counter Size',
+			"Pretty self explanatory, isn't it?",
+			'fpsCounterSize',
+			'percent');
+			option.scrollSpeed = 2;
+			option.minValue = 0.0;
+			option.maxValue = 20;
+			option.changeValue = 0.05;
+			option.decimals = 1;
+			addOption(option);
+			option.onChange = onChangeFPSCounter; //Changing onChange is only needed if you want to make a special interaction after it changes the value
+			*/
+
 		#if sys
 		var option:Option = new Option('VSync',
 			'If checked, Enables VSync fixing any screen tearing at the cost of capping the FPS to screen refresh rate.\n(Must restart the game to have an effect)',
@@ -220,6 +234,7 @@ class VisualsUISubState extends BaseOptionsMenu
 
 	function onChangeFPSCounter()
 	{
+		//Main.fpsVar.scaleX = Main.fpsVar.scaleY = ClientPrefs.data.fpsCounterSize;
 		if(Main.fpsVar != null)
 			Main.fpsVar.visible = ClientPrefs.data.showFPS;
 	}
