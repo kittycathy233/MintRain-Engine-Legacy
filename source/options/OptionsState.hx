@@ -14,7 +14,7 @@ import flixel.FlxSprite;
 
 class OptionsState extends MusicBeatState
 {
-	var options:Array<String> = ['Note Colors', 'KeyBoard Controls', 'Adjust Delay and Combo', 'Graphics', 'Visuals and UI', 'Gameplay' #if mobile , 'Mobile Options' #end];
+	var options:Array<String> = ['Note Colors', 'KeyBoard Controls', 'Adjust Delay and Combo', 'Graphics', 'Visuals and UI', 'Psych Gameplay', 'MintRain Gameplay' #if mobile , 'Mobile Options' #end];
 	private var grpOptions:FlxGroup;
 	private static var curSelected:Int = 0;
 	public static var menuBG:FlxSprite;
@@ -157,9 +157,13 @@ class OptionsState extends MusicBeatState
 			case 'Graphics':
 				openSubState(new options.GraphicsSettingsSubState());
 			case 'Visuals and UI':
-				openSubState(new options.VisualsUISubState());
+			openSubState(new options.VisualsUISubState());
 			case 'Gameplay':
-				openSubState(new options.GameplaySettingsSubState());
+			openSubState(new options.GameplaySettingsSubState());
+			case 'Psych Gameplay':
+			openSubState(new options.GameplaySettingsSubState());
+			case 'MintRain Gameplay':
+			openSubState(new options.ExtraGameplaySettingsSubState());
 			case 'Adjust Delay and Combo':
 				MusicBeatState.switchState(new options.NoteOffsetState());
 			case 'Mobile Options':

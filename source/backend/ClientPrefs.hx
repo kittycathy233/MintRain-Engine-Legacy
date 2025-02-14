@@ -16,7 +16,7 @@ import states.TitleState;
 	public var screensaver:Bool = false;
 	public var wideScreen:Bool = false;
 	#if android
-	public var storageType:String = "EXTERNAL_DATA";
+	public var storageType:String = "EXTERNAL";
 	#end
 	public var hitboxType:String = "Gradient";
 	public var popUpRating:Bool = true;
@@ -106,7 +106,14 @@ import states.TitleState;
 	public var iconbopstyle:String = 'MintRain';
 	public var healthbarstyle:String = 'Psych';
 	public var ratingsAlpha:Float = 1;
-	
+	public var customFadeStyle:String = 'Vanilla';
+	public var showRunningOS:Bool = true;
+	//NFE的特性
+	public var CustomFadeSound:Bool = true;
+	public var CustomFadeText:Bool = true;
+
+
+
 }
 
 class ClientPrefs {

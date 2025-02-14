@@ -31,6 +31,8 @@ class FPSCounter extends TextField
 		The current memory usage (WARNING: this is NOT your total program memory usage, rather it shows the garbage collector memory)
 	**/
 	public var memoryMegas(get, never):Float;
+	public var memoryPeakMegas(get, never):Float;
+    private var memoryPeak:Float = 0;
 
 	@:noCompletion private var times:Array<Float>;
 
@@ -82,10 +84,14 @@ class FPSCounter extends TextField
 
 	public dynamic function updateText():Void // so people can override it in hscript
 	{
+		if (memoryMegas > memoryPeak) {
+            memoryPeak = memoryMegas;
+        }
+
 		text = 
 		'FPS: $currentFPS' + 
-		'\nMemory: ${flixel.util.FlxStringUtil.formatBytes(memoryMegas)}' + 
-		os;
+		'\nMemory: ${flixel.util.FlxStringUtil.formatBytes(memoryMegas)}'+' | ${flixel.util.FlxStringUtil.formatBytes(memoryPeak)}';
+		if(ClientPrefs.data.showRunningOS) text +=  os;
 		if(ClientPrefs.data.exgameversion) text += '\nMintRain Engine v${MainMenuState.mintrainEngineVersion} \nPsych Engine v${MainMenuState.psychEngineVersion}';
 
 		textColor = 0xFFFFFFFF;
@@ -95,6 +101,9 @@ class FPSCounter extends TextField
 
 	inline function get_memoryMegas():Float
 		return cast(OpenFlSystem.totalMemory, UInt);
+
+	inline function get_memoryPeakMegas():Float
+        return memoryPeak;
 
 	public inline function positionFPS(X:Float, Y:Float, ?scale:Float = 1){
 		scaleX = scaleY = #if android (scale > 1 ? scale : 1) #else (scale < 1 ? scale : 1) #end;
